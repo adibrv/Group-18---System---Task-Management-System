@@ -1,8 +1,5 @@
-import pymysql
-import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-from tkinter import messagebox
 from tkcalendar import DateEntry
 
 # GUI Window
@@ -11,7 +8,7 @@ gui.title("Task Management System")
 gui.geometry("1024x768")
 tms_tree = ttk.Treeview(gui)
 
-# functions here
+# functions content
 
 # GUI contents
 header = Label(gui, text="Task Management System", font=('Arial Bold', 30))
