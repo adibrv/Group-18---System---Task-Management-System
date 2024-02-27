@@ -23,7 +23,7 @@ def table_refresh():
         tms_tree.insert(parent='', index='end', iid=array, text="", values=array, tag='row')
 
     tms_tree.tag_configure('row', background='#EEEEEE', font=('Arial', 12))
-    tms_tree.grid(row=10, column=0, columnspan=15, rowspan=11, padx=50, pady=20)
+    tms_tree.pack()
 
 
 # GUI Window
@@ -62,45 +62,90 @@ def add():
             conn.commit()
             conn.close()
         except:
-            messagebox.showinfo("Error", "Task name already exists")
+            messagebox.showinfo("Error", "Task ID already exists")
+            return
+
+    table_refresh()
+
+
+def delete():
+    decision = messagebox.askquestion("Confirmation", "Delete selected task?")
+    if decision != "yes":
+        return
+    else:
+        selectedItem = tms_tree.selection()[0]
+        deleteTask = str(tms_tree.item(selectedItem)['values'][1])
+        try:
+            conn = connectdb()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM tasks WHERE TITLE='"+str(deleteTask)+"'")
+            conn.commit()
+            conn.close()
+        except:
+            messagebox.showinfo("Error", "IDK")
             return
 
     table_refresh()
 
 
 # GUI contents
-header = Label(gui, text="Task Management System", font=('Arial Bold', 30))
-header.grid(row=0, column=0, columnspan=2, rowspan=1, padx=50, pady=40)
 
-taskName = Label(gui, text="Task name", font=('Arial', 12))
-taskName.grid(row=3, column=0, columnspan=1, padx=10, pady=5, sticky='e')
-taskNameEntry = ttk.Entry(gui, width=25, font=('Arial', 12))
-taskNameEntry.grid(row=3, column=1, columnspan=1, padx=5, pady=0)
+# Frames
+headerFrame = tk.Frame(gui)
+nameFrame = tk.Frame(gui)
+dateFrame = tk.Frame(gui)
+timeFrame = tk.Frame(gui)
+priorityFrame = tk.Frame(gui)
+buttonFrame = tk.Frame(gui)
 
-taskDate = Label(gui, text="Date", font=('Arial', 12))
-taskDate.grid(row=4, column=0, columnspan=1, padx=10, pady=5, sticky='e')
-taskDateEntry = DateEntry(gui, selectmode='day')
-taskDateEntry.grid(row=4, column=1, columnspan=1, padx=5, pady=0)
+headerFrame.pack(side='top', pady=40)
+nameFrame.pack(pady=10)
+dateFrame.pack(pady=10)
+timeFrame.pack(pady=10)
+priorityFrame.pack(pady=10)
+buttonFrame.pack(pady=10)
 
-taskTime = Label(gui, text="Time", font=('Arial', 12))
-taskTime.grid(row=5, column=0, columnspan=1, padx=10, pady=5, sticky='e')
-taskTimeHour = ttk.Entry(gui, width=25, font=('Arial', 12))
-taskTimeHour.grid(row=5, column=1, columnspan=1,padx=1, pady=0)
-taskTimeAMPM = ttk.Combobox(gui, width=5,values=['AM', 'PM'])
-taskTimeAMPM.grid(row=5, column=2, padx=5, pady=0)
+header = Label(headerFrame, text="Task Management System", font=('Arial Bold', 30))
+header.pack()
 
-taskPriority = Label(gui, text="Priority level", font=('Arial', 12))
-taskPriority.grid(row=6, column=0, columnspan=1, padx=10, pady=5, sticky='e')
-taskPriorityEntry = ttk.Combobox(gui, values=['Low', 'Medium', 'High'])
-taskPriorityEntry.grid(row=6, column=1, columnspan=1, padx=5, pady=0)
+taskName = Label(nameFrame, text="Task name: ", font=('Arial', 12))
+taskName.pack(side='left')
+taskNameEntry = ttk.Entry(nameFrame, width=25, font=('Arial', 12))
+taskNameEntry.pack(side='right')
 
+taskDate = Label(dateFrame, text="Date: ", font=('Arial', 12))
+taskDate.pack(side='left')
+taskDateEntry = DateEntry(dateFrame,selectmode='day')
+taskDateEntry.pack(side='right')
 
-addBtn = ttk.Button(gui, text='Add', width=10, command=add)
-addBtn.grid(row=3, column=6, columnspan=1, rowspan=2, padx=35, pady=0)
-updateBtn = ttk.Button(gui, text='Update', width=10)
-updateBtn.grid(row=4, column=6, columnspan=1, rowspan=2, padx=35, pady=0)
-deleteBtn = ttk.Button(gui, text='Delete', width=10)
-deleteBtn.grid(row=5, column=6, columnspan=1, rowspan=2, padx=35, pady=0)
+taskTime = Label(timeFrame, text="Time: ", font=('Arial', 12))
+taskTime.pack(side='left')
+taskTimeVar1 = tk.StringVar()
+taskTimeVar1.set("12")
+taskTimeHour = ttk.Spinbox(timeFrame, from_=1, to=12, textvariable=taskTimeVar1, width=3)
+taskTimeHour.pack(side='left')
+taskTimeVar2 = tk.StringVar()
+taskTimeVar2.set("00")
+taskTimeMin = ttk.Spinbox(timeFrame, from_=00, to=59, textvariable=taskTimeVar2, width=3)
+taskTimeMin.pack(side='left')
+taskTimeVar3 = tk.StringVar()
+taskTimeVar3.set("PM")
+taskTimeAMPM = ttk.Combobox(timeFrame, values=['AM', 'PM'], textvariable=taskTimeVar3, width=3)
+taskTimeAMPM.pack(side='left')
+
+taskPriority = Label(priorityFrame, text="Priority level: ", font=('Arial', 12))
+taskPriority.pack(side='left')
+taskPriorityVar = tk.StringVar()
+taskPriorityVar.set("Medium")
+taskPriorityEntry = ttk.Combobox(priorityFrame, values=['Low', 'Medium', 'High'], textvariable=taskPriorityVar)
+taskPriorityEntry.pack(side='left')
+
+addBtn = ttk.Button(buttonFrame, text='Add', width=10, command=add)
+addBtn.pack(side='left')
+updateBtn = ttk.Button(buttonFrame, text='Update', width=10)
+updateBtn.pack(side='left')
+deleteBtn = ttk.Button(buttonFrame, text='Delete', width=10, command=delete)
+deleteBtn.pack(side='left')
 
 style = ttk.Style()
 style.configure("Treeview.Heading", font=('Arial Bold', 12))
@@ -115,7 +160,7 @@ tms_tree.column("Date", anchor=W, width=170)
 tms_tree.heading("Date", text="Date", anchor=W)
 tms_tree.column("Time", anchor=W, width=150)
 tms_tree.heading("Time", text="Time", anchor=W)
-tms_tree.grid(row=10, column=0, columnspan=15, rowspan=11, padx=50, pady=20)
+tms_tree.pack()
 table_refresh()
 
 gui.mainloop()
