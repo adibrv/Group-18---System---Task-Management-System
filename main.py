@@ -9,10 +9,10 @@ from tkcalendar import DateEntry
 
 
 def connectdb():
-    conn = pymysql.connect(
+    connect = pymysql.connect(
         host='localhost', user='root', password='', db='tasklist'
     )
-    return conn
+    return connect
 
 
 def table_refresh():
@@ -36,12 +36,12 @@ tms_tree = ttk.Treeview(gui)
 
 
 def read():
-    conn = connectdb()
-    cursor = conn.cursor()
+    connect = connectdb()
+    cursor = connect.cursor()
     cursor.execute("SELECT * FROM tasks")
     results = cursor.fetchall()
-    conn.commit()
-    conn.close()
+    connect.commit()
+    connect.close()
     return results
 
 
@@ -49,20 +49,21 @@ def add():
     priority = str(taskPriorityEntry.get())
     title = str(taskNameEntry.get())
     date = str(taskDateEntry.get())
-    time = str(taskTimeHour.get()) + str(taskTimeAMPM.get())
+    time = str(taskTimeHour.get()) + ":" + str(taskTimeMin.get()) + str(taskTimeAMPM.get())
 
-    if (priority == '' or priority == ' ') or (title == '' or title == ' ') or (date == '' or date == ' ') or (time == '' or time == ' '):
+    if ((priority == '' or priority == ' ') or (title == '' or title == ' ')
+            or (date == '' or date == ' ') or (time == '' or time == ' ')):
         messagebox.showinfo("Error", "One or more entries are blank")
         return
     else:
         try:
-            conn = connectdb()
-            cursor = conn.cursor()
+            connect = connectdb()
+            cursor = connect.cursor()
             cursor.execute("INSERT INTO tasks VALUES ('"+priority+"', '"+title+"', '"+date+"', '"+time+"')")
-            conn.commit()
-            conn.close()
+            connect.commit()
+            connect.close()
         except:
-            messagebox.showinfo("Error", "Task ID already exists")
+            messagebox.showinfo("Error", "Task name already exists")
             return
 
     table_refresh()
@@ -126,12 +127,14 @@ taskTimeHour = ttk.Spinbox(timeFrame, from_=1, to=12, textvariable=taskTimeVar1,
 taskTimeHour.pack(side='left')
 taskTimeVar2 = tk.StringVar()
 taskTimeVar2.set("00")
+taskTime2 = Label(timeFrame, text=":", font=('Arial', 12))
+taskTime2.pack(side='left')
 taskTimeMin = ttk.Spinbox(timeFrame, from_=00, to=59, textvariable=taskTimeVar2, width=3)
 taskTimeMin.pack(side='left')
 taskTimeVar3 = tk.StringVar()
 taskTimeVar3.set("PM")
 taskTimeAMPM = ttk.Combobox(timeFrame, values=['AM', 'PM'], textvariable=taskTimeVar3, width=3)
-taskTimeAMPM.pack(side='left')
+taskTimeAMPM.pack(side='left', padx=5)
 
 taskPriority = Label(priorityFrame, text="Priority level: ", font=('Arial', 12))
 taskPriority.pack(side='left')
