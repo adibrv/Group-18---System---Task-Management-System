@@ -1,4 +1,5 @@
 import pymysql
+import babel
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -135,8 +136,12 @@ def select(event):
             taskPriorityVar.set(priority)
             taskNameVar.set(title)
             taskDateVar.set(date)
-            taskTimeVar1.set(time[:2])
-            taskTimeVar2.set(time[3:5])
+            if time[1] == ':':
+                taskTimeVar1.set(time[0])
+                taskTimeVar2.set(time[2:4])
+            else:
+                taskTimeVar1.set(time[:2])
+                taskTimeVar2.set(time[3:5])
             taskTimeVar3.set(time[-2:])
         except:
             messagebox.showinfo("Error", "Idk")
