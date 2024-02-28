@@ -1,5 +1,4 @@
 import pymysql
-import babel
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -44,10 +43,21 @@ def add():
     title = str(taskNameEntry.get())
     date = str(taskDateEntry.get())
     time = str(taskTimeHour.get()) + ":" + str(taskTimeMin.get()) + str(taskTimeAMPM.get())
+    try:
+        int(taskTimeHour.get())
+        int(taskTimeHour.get())
+    except ValueError:
+        messagebox.showinfo("Error", "Time value must be a number")
+        return
 
     if ((priority == '' or priority == ' ') or (title == '' or title == ' ')
             or (date == '' or date == ' ') or (time == '' or time == ' ')):
         messagebox.showinfo("Error", "One or more entries are blank")
+        return
+    elif ((len(taskTimeHour.get()) != 2 or len(taskTimeMin.get()) != 2 or
+          int(taskTimeHour.get()) > 12) or int(taskTimeMin.get()) > 12 or
+          int(taskTimeHour.get()) < 0 or int(taskTimeMin.get()) < 0):
+        messagebox.showinfo("Error", "Incorrect time value")
         return
     else:
         try:
