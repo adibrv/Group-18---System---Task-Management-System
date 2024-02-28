@@ -5,6 +5,8 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkcalendar import DateEntry
 
+# Content of Functions
+
 # Connect to DB
 
 
@@ -26,19 +28,10 @@ def table_refresh():
     tms_tree.pack()
 
 
-# GUI Window
-gui = Tk()
-gui.title("Task Management System")
-gui.geometry("1024x768")
-tms_tree = ttk.Treeview(gui)
-
-# functions content
-
-
 def read():
     connect = connectdb()
     cursor = connect.cursor()
-    cursor.execute("SELECT * FROM tasks")
+    cursor.execute("SELECT * FROM tasks ORDER BY PRIORITY")
     results = cursor.fetchall()
     connect.commit()
     connect.close()
@@ -69,6 +62,42 @@ def add():
     table_refresh()
 
 
+def update():
+    selectedTask = ''
+    decision = messagebox.askquestion("Confirmation", "Update selected task?")
+
+    if decision != 'yes':
+        return
+    else:
+        try:
+            selectedItem = tms_tree.selection()[0]
+            selectedTask = str(tms_tree.item(selectedItem)['values'][1])
+        except:
+            messagebox.showinfo("Error", "No task selected")
+
+        priority = str(taskPriorityEntry.get())
+        title = str(taskNameEntry.get())
+        date = str(taskDateEntry.get())
+        time = str(taskTimeHour.get()) + ":" + str(taskTimeMin.get()) + str(taskTimeAMPM.get())
+
+        if ((priority == '' or priority == ' ') or (title == '' or title == ' ')
+                or (date == '' or date == ' ') or (time == '' or time == ' ')):
+            messagebox.showinfo("Error", "One or more entries are blank")
+            return
+        else:
+            try:
+                conn = connectdb()
+                cursor = conn.cursor()
+                cursor.execute("UPDATE tasks SET PRIORITY='"+priority+"', TITLE='"+title+"', DATE='"+date+"', TIME='"+time+"' WHERE TITLE='"+selectedTask+"' ")
+                conn.commit()
+                conn.close()
+            except:
+                messagebox.showinfo("Error", "Something happened omg")
+                return
+
+    table_refresh()
+
+
 def delete():
     decision = messagebox.askquestion("Confirmation", "Delete selected task?")
     if decision != "yes":
@@ -89,7 +118,37 @@ def delete():
     table_refresh()
 
 
+def select(event):
+    region = tms_tree.identify("region", event.x, event.y)
+    if region == "nothing":
+        table_refresh()
+    elif region == "heading":
+        return
+    else:
+        try:
+            selectedItem = tms_tree.selection()[0]
+            priority = str(tms_tree.item(selectedItem)['values'][0])
+            title = str(tms_tree.item(selectedItem)['values'][1])
+            date = str(tms_tree.item(selectedItem)['values'][2])
+            time = str(tms_tree.item(selectedItem)['values'][3])
+
+            taskPriorityVar.set(priority)
+            taskNameVar.set(title)
+            taskDateVar.set(date)
+            taskTimeVar1.set(time[:2])
+            taskTimeVar2.set(time[3:5])
+            taskTimeVar3.set(time[-2:])
+        except:
+            messagebox.showinfo("Error", "Idk")
+
+
 # GUI contents
+
+# GUI Window
+gui = Tk()
+gui.title("Task Management System")
+gui.geometry("1024x768")
+tms_tree = ttk.Treeview(gui)
 
 # Frames
 headerFrame = tk.Frame(gui)
@@ -111,12 +170,14 @@ header.pack()
 
 taskName = Label(nameFrame, text="Task name: ", font=('Arial', 12))
 taskName.pack(side='left')
-taskNameEntry = ttk.Entry(nameFrame, width=25, font=('Arial', 12))
+taskNameVar = tk.StringVar()
+taskNameEntry = ttk.Entry(nameFrame, width=25, font=('Arial', 12), textvariable=taskNameVar)
 taskNameEntry.pack(side='right')
 
 taskDate = Label(dateFrame, text="Date: ", font=('Arial', 12))
 taskDate.pack(side='left')
-taskDateEntry = DateEntry(dateFrame,selectmode='day')
+taskDateVar = tk.StringVar()
+taskDateEntry = DateEntry(dateFrame,selectmode='day', textvariable=taskDateVar)
 taskDateEntry.pack(side='right')
 
 taskTime = Label(timeFrame, text="Time: ", font=('Arial', 12))
@@ -129,7 +190,7 @@ taskTimeVar2 = tk.StringVar()
 taskTimeVar2.set("00")
 taskTime2 = Label(timeFrame, text=":", font=('Arial', 12))
 taskTime2.pack(side='left')
-taskTimeMin = ttk.Spinbox(timeFrame, from_=00, to=59, textvariable=taskTimeVar2, width=3)
+taskTimeMin = ttk.Spinbox(timeFrame, from_=00, to=59, format="%02.0f", textvariable=taskTimeVar2, width=3)
 taskTimeMin.pack(side='left')
 taskTimeVar3 = tk.StringVar()
 taskTimeVar3.set("PM")
@@ -139,13 +200,13 @@ taskTimeAMPM.pack(side='left', padx=5)
 taskPriority = Label(priorityFrame, text="Priority level: ", font=('Arial', 12))
 taskPriority.pack(side='left')
 taskPriorityVar = tk.StringVar()
-taskPriorityVar.set("Medium")
-taskPriorityEntry = ttk.Combobox(priorityFrame, values=['Low', 'Medium', 'High'], textvariable=taskPriorityVar)
+taskPriorityVar.set("2 - Normal")
+taskPriorityEntry = ttk.Combobox(priorityFrame, values=['1 - High', '2 - Normal', '3 - Low'], textvariable=taskPriorityVar)
 taskPriorityEntry.pack(side='left')
 
 addBtn = ttk.Button(buttonFrame, text='Add', width=10, command=add)
 addBtn.pack(side='left')
-updateBtn = ttk.Button(buttonFrame, text='Update', width=10)
+updateBtn = ttk.Button(buttonFrame, text='Update', width=10, command=update)
 updateBtn.pack(side='left')
 deleteBtn = ttk.Button(buttonFrame, text='Delete', width=10, command=delete)
 deleteBtn.pack(side='left')
@@ -164,6 +225,9 @@ tms_tree.heading("Date", text="Date", anchor=W)
 tms_tree.column("Time", anchor=W, width=150)
 tms_tree.heading("Time", text="Time", anchor=W)
 tms_tree.pack()
+
+tms_tree.bind("<Double-1>", select)
+
 table_refresh()
 
 gui.mainloop()
