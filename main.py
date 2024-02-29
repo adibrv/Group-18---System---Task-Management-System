@@ -31,7 +31,7 @@ def table_refresh():
 def read():
     connect = connectdb()
     cursor = connect.cursor()
-    cursor.execute("SELECT * FROM tasks ORDER BY PRIORITY")
+    cursor.execute("SELECT * FROM tasks ORDER BY PRIORITY ASC, DATE ASC, TIME ASC")
     results = cursor.fetchall()
     connect.commit()
     connect.close()
@@ -66,7 +66,7 @@ def add():
             cursor.execute("INSERT INTO tasks VALUES ('"+priority+"', '"+title+"', '"+date+"', '"+time+"')")
             connect.commit()
             connect.close()
-        except:
+        except pymysql.err.IntegrityError:
             messagebox.showinfo("Error", "Task name already exists")
             return
 
@@ -83,7 +83,7 @@ def update():
         try:
             selectedItem = tms_tree.selection()[0]
             selectedTask = str(tms_tree.item(selectedItem)['values'][1])
-        except:
+        except ValueError:
             messagebox.showinfo("Error", "No task selected")
 
         priority = str(taskPriorityEntry.get())
@@ -102,7 +102,7 @@ def update():
                 cursor.execute("UPDATE tasks SET PRIORITY='"+priority+"', TITLE='"+title+"', DATE='"+date+"', TIME='"+time+"' WHERE TITLE='"+selectedTask+"' ")
                 conn.commit()
                 conn.close()
-            except:
+            except ValueError:
                 messagebox.showinfo("Error", "Something happened omg")
                 return
 
@@ -123,7 +123,7 @@ def delete():
             conn.commit()
             conn.close()
         except:
-            messagebox.showinfo("Error", "IDK")
+            messagebox.showinfo("Error", "Delete failed")
             return
 
     table_refresh()
@@ -153,7 +153,7 @@ def select(event):
                 taskTimeVar1.set(time[:2])
                 taskTimeVar2.set(time[3:5])
             taskTimeVar3.set(time[-2:])
-        except:
+        except ValueError:
             messagebox.showinfo("Error", "Idk")
 
 
@@ -163,7 +163,6 @@ def select(event):
 gui = Tk()
 gui.title("Task Management System")
 gui.geometry("1024x768")
-tms_tree = ttk.Treeview(gui)
 
 # Frames
 headerFrame = tk.Frame(gui)
@@ -172,6 +171,7 @@ dateFrame = tk.Frame(gui)
 timeFrame = tk.Frame(gui)
 priorityFrame = tk.Frame(gui)
 buttonFrame = tk.Frame(gui)
+treeFrame = tk.Frame(gui)
 
 headerFrame.pack(side='top', pady=40)
 nameFrame.pack(pady=10)
@@ -179,6 +179,7 @@ dateFrame.pack(pady=10)
 timeFrame.pack(pady=10)
 priorityFrame.pack(pady=10)
 buttonFrame.pack(pady=10)
+treeFrame.pack(pady=10)
 
 header = Label(headerFrame, text="Task Management System", font=('Arial Bold', 30))
 header.pack()
@@ -192,7 +193,7 @@ taskNameEntry.pack(side='right')
 taskDate = Label(dateFrame, text="Date: ", font=('Arial', 12))
 taskDate.pack(side='left')
 taskDateVar = tk.StringVar()
-taskDateEntry = DateEntry(dateFrame,selectmode='day', textvariable=taskDateVar)
+taskDateEntry = DateEntry(dateFrame, selectmode='day', textvariable=taskDateVar)
 taskDateEntry.pack(side='right')
 
 taskTime = Label(timeFrame, text="Time: ", font=('Arial', 12))
@@ -216,7 +217,8 @@ taskPriority = Label(priorityFrame, text="Priority level: ", font=('Arial', 12))
 taskPriority.pack(side='left')
 taskPriorityVar = tk.StringVar()
 taskPriorityVar.set("2 - Normal")
-taskPriorityEntry = ttk.Combobox(priorityFrame, values=['1 - High', '2 - Normal', '3 - Low'], textvariable=taskPriorityVar)
+taskPriorityEntry = ttk.Combobox(priorityFrame, values=['1 - High', '2 - Normal', '3 - Low'],
+                                 textvariable=taskPriorityVar)
 taskPriorityEntry.pack(side='left')
 
 addBtn = ttk.Button(buttonFrame, text='Add', width=10, command=add)
@@ -229,6 +231,7 @@ deleteBtn.pack(side='left')
 style = ttk.Style()
 style.configure("Treeview.Heading", font=('Arial Bold', 12))
 
+tms_tree = ttk.Treeview(treeFrame, selectmode='browse')
 tms_tree['columns'] = ('Priority', 'Task', 'Date', 'Time')
 tms_tree.column("#0", width=0, stretch=NO)
 tms_tree.column("Priority", anchor=W, width=150)
@@ -239,7 +242,11 @@ tms_tree.column("Date", anchor=W, width=170)
 tms_tree.heading("Date", text="Date", anchor=W)
 tms_tree.column("Time", anchor=W, width=150)
 tms_tree.heading("Time", text="Time", anchor=W)
-tms_tree.pack()
+tms_tree.pack(side='left')
+
+scrollBar = ttk.Scrollbar(treeFrame, orient='vertical', command=tms_tree.yview)
+scrollBar.pack(side='right', fill='y', expand=True)
+tms_tree.configure(yscrollcommand=scrollBar.set)
 
 tms_tree.bind("<Double-1>", select)
 
