@@ -39,27 +39,33 @@ def read():
 
 
 def add():
-    priority = str(taskPriorityEntry.get())
-    title = str(taskNameEntry.get())
-    date = str(taskDateEntry.get())
-    time = str(taskTimeHour.get()) + ":" + str(taskTimeMin.get()) + str(taskTimeAMPM.get())
+    priority = str(taskPriorityEntry.get()).strip()
+    title = str(taskNameEntry.get()).strip()
+    date = str(taskDateEntry.get()).strip()
+    time = str(taskTimeHour.get()).strip() + ":" + str(taskTimeMin.get()).strip() + str(taskTimeAMPM.get()).strip()
+
+    year = int(date[-2:])
+
     try:
         int(taskTimeHour.get())
         int(taskTimeHour.get())
     except ValueError:
         messagebox.showinfo("Error", "Time value must be a number")
         return
-
-    if ((priority == '' or priority == ' ') or (title == '' or title == ' ')
-            or (date == '' or date == ' ') or (time == '' or time == ' ')):
-        messagebox.showinfo("Error", "One or more entries are blank")
+    if ((priority == '') or (title == '')
+            or (date == '') or (time == '')):
+        messagebox.showinfo("Error", "Task name cannot be blank")
         return
     elif ((len(taskTimeHour.get()) != 2 or len(taskTimeMin.get()) != 2 or
           int(taskTimeHour.get()) > 12) or int(taskTimeMin.get()) > 12 or
           int(taskTimeHour.get()) < 0 or int(taskTimeMin.get()) < 0):
         messagebox.showinfo("Error", "Incorrect time value")
         return
+
     else:
+        if year < 24:
+            date += ' (OVERDUE)'
+            print(date)
         try:
             connect = connectdb()
             cursor = connect.cursor()
@@ -91,9 +97,9 @@ def update():
         date = str(taskDateEntry.get())
         time = str(taskTimeHour.get()) + ":" + str(taskTimeMin.get()) + str(taskTimeAMPM.get())
 
-        if ((priority == '' or priority == ' ') or (title == '' or title == ' ')
-                or (date == '' or date == ' ') or (time == '' or time == ' ')):
-            messagebox.showinfo("Error", "One or more entries are blank")
+        if ((priority.strip() == '') or (title.strip() == '')
+                or (date.strip() == '') or (time.strip() == '')):
+            messagebox.showinfo("Error", "Task name cannot be blank")
             return
         else:
             try:
